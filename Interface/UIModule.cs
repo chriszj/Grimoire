@@ -16,7 +16,7 @@ namespace GLIB.Interface {
 
 	public sealed class UIModuleDisplayObject:MonoBehaviour{
 
-		public delegate void OnKillDelegate();
+		public delegate void OnKillDelegate(bool force = false);
 		OnKillDelegate _OnKill;
 		public OnKillDelegate OnKill {get{return _OnKill;}set{_OnKill = value;}}
 
@@ -24,7 +24,7 @@ namespace GLIB.Interface {
 		public void OnDestroy ()
 		{
 			try{
-				_OnKill();
+				_OnKill(true);
 			}
 			catch(System.NullReferenceException e)
 			{
@@ -85,6 +85,63 @@ namespace GLIB.Interface {
 		/// <value>The display index of the object Z.</value>
 		protected abstract int DisplayObjectZIndex{ get; }
 
+		/* Animations */
+
+		public struct Transition {
+
+			/// Animation Types to perform when Module is initialized / terminated, mix is not supported yet.
+			public enum InOutAnimations:int {
+				NONE = 0,
+				SCALE = 1
+			}
+
+			public InOutAnimations animationType;// = InOutAnimation.NONE;
+
+			/// <summary>
+			/// The _in out animation duration.
+			/// </summary>
+			public float animationDuration;// = 0.5f;
+
+			/// <summary>
+			/// The _in out animation deformation amount, sets how much far or near the display object will be affected. 
+			/// Must be in percentage value 0-1;
+			/// </summary>
+			public float animationDeform;// = 0.5f;
+
+			public float animationPercent;
+
+			/// <summary>
+			/// Initializes a new instance of the <see cref="GLIB.Interface.UIModule`1+Transition"/> struct.
+			/// </summary>
+			/// <param name="animation">The type of animation, currently only supports: None and Scale</param>
+			/// <param name="duration">The duration of the animation</param>
+			/// <param name="offset">How much the module will be deformed. Use a value from 0-100</param>
+			public Transition(InOutAnimations animation = InOutAnimations.NONE, float duration = 0.5f, float deformAmount = 0.5f){
+				animationType = animation;
+				animationDuration = duration;
+				animationDeform= deformAmount;
+				animationPercent = 0;
+			}
+
+		}
+
+		Transition _inOutTransition;
+		/// <summary>
+		/// Returns the transition animation that will be executed when the module initializes or ends, override to customize
+		/// By default returns a transition without animation.
+		/// </summary>
+		protected virtual Transition InOutTransition{ get { return new Transition (); } }
+
+		bool? _animateIn = null;
+		bool? _animateOut = null;
+
+	    /// <summary>
+	    /// Save original values;
+	    /// </summary>
+	    Vector3 _inOutOriginalScale;
+
+		/*End Animations*/
+
 		protected abstract void ProcessInitialization();
 		
 		protected abstract void ProcessTermination();
@@ -101,7 +158,7 @@ namespace GLIB.Interface {
 		/// Initialize this instance with a custom displayObjectPath.
 		/// </summary>
 		/// <param name="displayObjectPath">Display object path.</param>
-		public virtual void Initialize (string displayObjPath, Transform displayObjParent, Vector2? displayObjPosition, int displayObjZIndex)
+		public virtual void Initialize (string displayObjPath, Transform displayObjParent, Vector2? displayObjPosition, int displayObjZIndex, Transition transitionAnim)
 		{
 			if (!_isRunning) {
 
@@ -112,6 +169,10 @@ namespace GLIB.Interface {
 					_displayObjectParent = displayObjParent;
 					_displayObjectPosition = displayObjPosition;
 					_displayObjectZIndex = displayObjZIndex;
+					_inOutTransition = transitionAnim;
+
+					if(_inOutTransition.animationType != Transition.InOutAnimations.NONE)
+						_animateIn = true;
 
 					RenderDisplayObject();
 					ProcessInitialization();
@@ -120,7 +181,7 @@ namespace GLIB.Interface {
 				catch (System.Exception e)
 				{
 					Debug.LogError("Could not Process Initialization\n"+e.Message);
-					Terminate();
+					Terminate(true);
 				}
 
 			}
@@ -140,6 +201,10 @@ namespace GLIB.Interface {
 					_displayObjectParent = DisplayObjectParent;
 					_displayObjectPosition = DisplayObjectPosition;
 					_displayObjectZIndex = DisplayObjectZIndex;
+					_inOutTransition = InOutTransition;
+
+					if(_inOutTransition.animationType != Transition.InOutAnimations.NONE)
+						_animateIn = true;
 
 					RenderDisplayObject();
 					ProcessInitialization();
@@ -148,7 +213,7 @@ namespace GLIB.Interface {
 				catch (System.Exception e)
 				{
 					Debug.LogError("Could not Process Initialization\n"+e.Message+"\n"+e.StackTrace);
-					Terminate();
+					Terminate(true);
 				}
 
 			}
@@ -158,6 +223,106 @@ namespace GLIB.Interface {
 			
 			if (_isRunning) {
 				try {
+
+					/*Animation*/
+
+					if(_animateIn == true){
+
+						if(_inOutTransition.animationType == Transition.InOutAnimations.SCALE){
+							
+							Vector3 fscale = _displayObject.transform.localScale;
+							Vector3 tscale = new Vector3(_inOutOriginalScale.x,
+							                             _inOutOriginalScale.y,
+							                             _inOutOriginalScale.z);
+							
+							Vector3 nscale = Vector3.Lerp (fscale, tscale, _inOutTransition.animationPercent);
+							_displayObject.transform.localScale = nscale;
+							
+							Image[] imgs = _displayObject.GetComponentsInChildren<Image> ();
+							
+							Text[] texts = _displayObject.GetComponentsInChildren<Text> ();
+							
+							foreach (Image img in imgs) {
+								
+								Color32 ncolor = img.color;
+								ncolor.a = 255;
+								
+								img.color = Color32.Lerp (img.color, ncolor, _inOutTransition.animationPercent);
+							}
+							
+							foreach (Text text in texts) {
+								
+								Color32 tncolor = text.color;
+								tncolor.a = 255;
+								
+								text.color = Color32.Lerp (text.color, tncolor, _inOutTransition.animationPercent);
+								
+							}
+							
+							if (_inOutTransition.animationPercent <= 1){
+								_inOutTransition.animationPercent += Time.deltaTime / _inOutTransition.animationDuration;
+							}
+							else{
+								_inOutTransition.animationPercent = 0;
+								_animateIn = false;
+							}
+
+						}
+						else {
+							_animateIn = false;
+						}
+
+					}
+					else if(_animateOut == true){
+
+						if(_inOutTransition.animationType == Transition.InOutAnimations.SCALE){
+
+							Vector3 fscale = _displayObject.transform.localScale;
+							Vector3 tscale = new Vector3(_inOutOriginalScale.x * _inOutTransition.animationDeform,
+							                             _inOutOriginalScale.y * _inOutTransition.animationDeform,
+							                             _inOutOriginalScale.z * _inOutTransition.animationDeform);
+
+							Vector3 nscale = Vector3.Lerp (fscale, tscale, _inOutTransition.animationPercent);
+							DisplayObject.transform.localScale = nscale;
+							
+							Image[] imgs = DisplayObject.GetComponentsInChildren<Image> ();
+							
+							Text[] texts = DisplayObject.GetComponentsInChildren<Text> ();
+							
+							foreach (Image img in imgs) {
+								
+								Color32 ncolor = img.color;
+								ncolor.a = 0;
+								
+								img.color = Color32.Lerp (img.color, ncolor, _inOutTransition.animationPercent);
+							}
+							
+							foreach (Text text in texts) {
+								
+								Color32 tncolor = text.color;
+								tncolor.a = 0;
+								
+								text.color = Color32.Lerp (text.color, tncolor, _inOutTransition.animationPercent);
+								
+							}
+							
+							if (_inOutTransition.animationPercent <= 1){
+								_inOutTransition.animationPercent += Time.deltaTime / _inOutTransition.animationDuration;
+							}
+							else{
+								_inOutTransition.animationPercent = 0;
+								_animateOut = false;
+								Terminate ();
+							}
+						}
+						else {
+							Terminate();
+							_animateOut = false;
+						}
+					}
+						
+					/*En Animation*/
+
 					ProcessUpdate ();
 				}
 				catch(System.Exception e) {
@@ -167,21 +332,33 @@ namespace GLIB.Interface {
 			
 		}
 
-		public virtual void Terminate ()
+		public virtual void Terminate (bool force = false)
 		{
 			if (_isRunning) {
 
-				try {
+				if(_inOutTransition.animationType == Transition.InOutAnimations.NONE || _animateOut == false || force){
 
-					_isRunning = false;
-					ClearDisplayObject();
-					ProcessTermination();
+					try {
+
+						_isRunning = false;
+						ClearDisplayObject();
+						ProcessTermination();
+
+						_animateIn = null;
+						_animateOut = null;
+
+					}
+					catch (System.Exception e)
+					{
+						Debug.LogError("Could not Process Termination\n"+e.Message+"\n"+e.StackTrace);
+						ClearDisplayObject();
+
+					}
 
 				}
-				catch (System.Exception e)
-				{
-					Debug.LogError("Could not Process Termination\n"+e.Message+"\n"+e.StackTrace);
-					ClearDisplayObject();
+				else{
+
+					_animateOut = true;
 
 				}
 
@@ -283,7 +460,36 @@ namespace GLIB.Interface {
 				// Readjust Position and Scale in order to prevent "Canvas Scaler" deformations
 				_displayObject.GetComponent<RectTransform>().anchoredPosition = origPos;
 				_displayObject.GetComponent<RectTransform>().sizeDelta = origSize;
-						
+
+
+				/*Animation Preparation*/
+
+				if( _inOutTransition.animationType == Transition.InOutAnimations.SCALE ){
+				
+					_inOutOriginalScale = _displayObject.transform.localScale;
+					_displayObject.transform.localScale = new Vector3(_inOutOriginalScale.x * _inOutTransition.animationDeform, 
+					                                                  _inOutOriginalScale.y * _inOutTransition.animationDeform,
+					                                                  _inOutOriginalScale.z * _inOutTransition.animationDeform);
+
+					Image[] imgs = _displayObject.GetComponentsInChildren<Image>();
+
+					foreach(Image img in imgs){
+						Color32 ncolor = img.color;
+						ncolor.a = 0;
+						img.color = ncolor;
+					}
+				
+					Text[] texts = _displayObject.GetComponentsInChildren<Text>();
+
+					foreach(Text text in texts){
+						Color32 tncolor = text.color;
+						tncolor.a = 0;
+						text.color = tncolor;
+					}
+
+				}
+
+				/*End Animation*/
 				
 			}
 			catch(System.NullReferenceException e)
@@ -308,13 +514,13 @@ namespace GLIB.Interface {
 		public override void OnDestroy ()
 		{
 			_isApplicationQuitting = true;
-			Terminate ();
+			Terminate (true);
 		}
 
 		public override void OnApplicationQuit ()
 		{
 			_isApplicationQuitting = true;
-			Terminate ();
+			Terminate (true);
 		}
 
 	}
