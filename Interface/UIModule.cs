@@ -85,6 +85,21 @@ namespace GLIB.Interface {
 		/// <value>The display index of the object Z.</value>
 		protected abstract int DisplayObjectZIndex{ get; }
 
+		/// <summary>
+		/// Store original alpha values
+		/// </summary>
+		List<float> _rawImageAlphaValues = new List<float>();
+		List<float> _imageAlphaValues = new List<float>();
+		List<float> _textAlphaValues = new List<float>(); 
+
+		/// <summary>
+		/// Get components with color property
+		/// </summary>
+		RawImage[] _rawImageComponents;
+		Image[] _imageComponents;
+		Text[] _textComponents;
+
+
 		/* Animations */
 
 		public struct Transition {
@@ -237,13 +252,47 @@ namespace GLIB.Interface {
 							
 							Vector3 nscale = Vector3.Lerp (fscale, tscale, _inOutTransition.animationPercent);
 							_displayObject.transform.localScale = nscale;
-							
-							Image[] imgs = _displayObject.GetComponentsInChildren<Image> ();
-							
+
+							for(int ri = 0; ri < _rawImageComponents.Length; ri++){
+
+								RawImage rImgComp = _rawImageComponents[ri];
+
+								Color rncolor = rImgComp.color;
+								rncolor.a = _rawImageAlphaValues[ri];
+
+								rImgComp.color = Color.Lerp(rImgComp.color, rncolor, _inOutTransition.animationPercent);
+
+							}
+
+							for(int i = 0; i < _imageComponents.Length; i++){
+
+								Image imgComp = _imageComponents[i];
+
+								Color ncolor = imgComp.color;
+								ncolor.a = _imageAlphaValues[i];
+
+								imgComp.color = Color.Lerp(imgComp.color, ncolor, _inOutTransition.animationPercent);
+
+							}
+
+							for(int t = 0; t < _textComponents.Length; t++){
+
+								Text textComp = _textComponents[t];
+
+								Color tncolor = textComp.color;
+								tncolor.a = _textAlphaValues[t];
+
+								textComp.color = Color.Lerp(textComp.color, tncolor, _inOutTransition.animationPercent);
+
+							}
+
+
+							/*Image[] imgs = _displayObject.GetComponentsInChildren<Image> ();
+														
 							Text[] texts = _displayObject.GetComponentsInChildren<Text> ();
-							
+
 							foreach (Image img in imgs) {
-								
+
 								Color32 ncolor = img.color;
 								ncolor.a = 255;
 								
@@ -257,7 +306,7 @@ namespace GLIB.Interface {
 								
 								text.color = Color32.Lerp (text.color, tncolor, _inOutTransition.animationPercent);
 								
-							}
+							}*/
 							
 							if (_inOutTransition.animationPercent <= 1){
 								_inOutTransition.animationPercent += Time.deltaTime / _inOutTransition.animationDuration;
@@ -284,10 +333,21 @@ namespace GLIB.Interface {
 
 							Vector3 nscale = Vector3.Lerp (fscale, tscale, _inOutTransition.animationPercent);
 							DisplayObject.transform.localScale = nscale;
+
+							RawImage[] rImgs = DisplayObject.GetComponentsInChildren<RawImage>(); 
 							
 							Image[] imgs = DisplayObject.GetComponentsInChildren<Image> ();
 							
 							Text[] texts = DisplayObject.GetComponentsInChildren<Text> ();
+
+							foreach (RawImage rImg in rImgs){
+
+								Color32 rncolor = rImg.color;
+								rncolor.a = 0;
+
+								rImg.color = Color32.Lerp(rImg.color, rncolor, _inOutTransition.animationPercent);
+
+							}
 							
 							foreach (Image img in imgs) {
 								
@@ -471,6 +531,46 @@ namespace GLIB.Interface {
 					                                                  _inOutOriginalScale.y * _inOutTransition.animationDeform,
 					                                                  _inOutOriginalScale.z * _inOutTransition.animationDeform);
 
+					_rawImageComponents = _displayObject.GetComponentsInChildren<RawImage>();
+
+					for(int ri = 0; ri < _rawImageComponents.Length; ri++){
+
+						if(_rawImageAlphaValues.Count <= ri)
+							_rawImageAlphaValues.Add(_rawImageComponents[ri].color.a);
+
+						Color32 rncolor = _rawImageComponents[ri].color;
+						rncolor.a = 0;
+						_rawImageComponents[ri].color = rncolor;
+
+					}
+
+					_imageComponents = _displayObject.GetComponentsInChildren<Image>();
+
+					for(int i = 0; i < _imageComponents.Length; i++){
+
+						if(_imageAlphaValues.Count <= i)
+							_imageAlphaValues.Add(_imageComponents[i].color.a);
+
+						Color32 ncolor = _imageComponents[i].color;
+						ncolor.a = 0;
+						_imageComponents[i].color = ncolor;
+
+					}
+
+					_textComponents = _displayObject.GetComponentsInChildren<Text>();
+
+					for (int t = 0; t < _textComponents.Length; t++){
+
+						if(_textAlphaValues.Count <= t)
+							_textAlphaValues.Add(_textComponents[t].color.a);
+
+						Color32 tncolor = _textComponents[t].color;
+						tncolor.a = 0;
+						_textComponents[t].color = tncolor;
+
+					}
+
+					/*
 					Image[] imgs = _displayObject.GetComponentsInChildren<Image>();
 
 					foreach(Image img in imgs){
@@ -485,7 +585,7 @@ namespace GLIB.Interface {
 						Color32 tncolor = text.color;
 						tncolor.a = 0;
 						text.color = tncolor;
-					}
+					}*/
 
 				}
 
