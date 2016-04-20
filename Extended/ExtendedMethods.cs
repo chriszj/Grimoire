@@ -50,18 +50,30 @@ namespace GLIB.Extended {
 		public static T FindAndResolveComponent<T>(this MonoBehaviour gameObj, string name, GameObject parent) where T:Component
 		{
 			GameObject obj = null;
-			
-			Transform[] childs = parent.GetComponentsInChildren<Transform> ();
-			
-			foreach (Transform cTransform in childs) {
-				
-				if (cTransform.name == name) {
-					obj = cTransform.gameObject;
-					break;
-				}
-				
-			}
-			
+
+            if (parent != null)
+            {
+
+                Transform[] childs = parent.GetComponentsInChildren<Transform>();
+
+                foreach (Transform cTransform in childs)
+                {
+
+                    if (cTransform.name == name)
+                    {
+                        obj = cTransform.gameObject;
+                        break;
+                    }
+
+                }
+
+            }
+            else { // look the object in the root hierarchy
+
+                obj = GameObject.Find(name);
+
+            }
+
 			if(obj == null)
 				throw new System.NullReferenceException("Game Object wit name: "+name+" could not be found within "+parent.name+".");
 

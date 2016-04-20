@@ -47,7 +47,7 @@ namespace GLIB.Interface {
 		}
 
 		bool _isRunning = false;
-		public bool IsRunning{get{return _isRunning;}}
+		public bool isRunning{get{return _isRunning;}}
 
 		GameObject _displayObject;
 		/// <summary>
