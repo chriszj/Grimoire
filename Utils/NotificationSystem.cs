@@ -49,7 +49,7 @@ namespace GLIB.Utils {
 
 				_messageText = value;
 
-				if (IsRunning) {
+				if (isRunning) {
 
 					_messageTextComp.text = value;
 
@@ -73,7 +73,7 @@ namespace GLIB.Utils {
 
 				_messageIcon = value;
 
-				if (IsRunning) { 			
+				if (isRunning) { 			
 
 					_messageImageComp.sprite = _messageIcon;
 
@@ -117,7 +117,7 @@ namespace GLIB.Utils {
 				_messageProgressMode = value;
 
 				//Set display of the buttons according to the value
-				if(IsRunning){
+				if(isRunning){
 
 					_messageAcceptButton.gameObject.SetActive (_onMessageAccept == null || value? false : true);
 					_messageDeclineButton.gameObject.SetActive (_onMessageDecline == null || value? false : true);
@@ -191,7 +191,7 @@ namespace GLIB.Utils {
 			set { 
 				_onMessageAccept = value;
 
-				if (IsRunning) {
+				if (isRunning) {
 					_messageAcceptButton.gameObject.SetActive (_onMessageAccept == null ? false : true);
 					HandleWindowButtons (_messageAcceptButton, _messageDeclineButton, _messageWindow);
 				
@@ -212,7 +212,7 @@ namespace GLIB.Utils {
 			set{
 				_onMessageDecline = value;
 
-				if (IsRunning) {
+				if (isRunning) {
 					_messageDeclineButton.gameObject.SetActive (_onMessageDecline == null ? false : true);
 					HandleWindowButtons (_messageAcceptButton, _messageDeclineButton, _messageWindow);
 

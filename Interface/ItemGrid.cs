@@ -134,7 +134,7 @@ namespace GLIB.Interface {
 			if(_parent != null)
 			{
 
-				Transform transform;
+				Transform transform = _parent.transform;
 
 				CanvasScaler _parentCanvScaler = transform.GetMainCanvas().gameObject.ResolveComponent<CanvasScaler>();
 
