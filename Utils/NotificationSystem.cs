@@ -181,7 +181,7 @@ namespace GLIB.Utils {
 
 		#region Delegates
 
-		public delegate void OnMessageAcceptDelegate();
+		public delegate void OnMessageAcceptDelegate(bool force = false);
 		OnMessageAcceptDelegate _onMessageAccept;
 
 		public OnMessageAcceptDelegate OnMessageAccept{
