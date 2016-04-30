@@ -8,7 +8,7 @@ namespace GLIB.Core {
 	public abstract class BackModule<N> : Singleton<N> where N : BackModule<N> {
 
 		bool _isRunning = false;
-		public bool IsRunning {get{return _isRunning;}}
+		public bool isRunning {get{return _isRunning;}}
 
 		static bool _isApplicationQuitting;
 
