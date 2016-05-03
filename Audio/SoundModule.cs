@@ -10,6 +10,9 @@ namespace GLIB.Audio
     public class SoundModule : BackModule<SoundModule> {
 
         int _maxChannels = 6;
+        /// <summary>
+        /// Defines the maximum channels to use.
+        /// </summary>
         public int MaxChannels {
             get {
                 return _maxChannels;
