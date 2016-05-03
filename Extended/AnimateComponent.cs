@@ -175,5 +175,15 @@ namespace GLIB.Extended
 
         }
 
+        /// <summary>
+        /// Stops all animations being applied to the object, the object transform won't be reverted to its original values.
+        /// That is the object's position, rotation, and scale values won't be reverted to the starting values before animating.
+        /// </summary>
+        public void StopAllAnimations() {
+            _translating = false;
+            _rotating = false;
+            _scaling = false;
+        }
+
     }
 }
