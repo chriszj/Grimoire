@@ -1,60 +1,101 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof(AudioSource))]
-public class SoundChannel : MonoBehaviour {
+namespace GLIB.Audio {
 
-    public enum PlayPriority : int {
-        NORMAL = 0,
-        HIGH = 1
-    }
+    [RequireComponent(typeof(AudioSource))]
+    public class SoundChannel : MonoBehaviour
+    {
 
-    PlayPriority _playPriority = PlayPriority.NORMAL;
-    public PlayPriority playPriority {
-        get {
-            return _playPriority;
+        public enum PlayPriority : int
+        {
+            NORMAL = 0,
+            HIGH = 1
         }
-        set {
-            _playPriority = value;
+
+        PlayPriority _playPriority = PlayPriority.NORMAL;
+        /// <summary>
+        /// Sets the priority flag of the SoundChannel. See the SoundModule.PlaySound Method for more Information.
+        /// </summary>
+        public PlayPriority playPriority
+        {
+            get
+            {
+                return _playPriority;
+            }
+            set
+            {
+                _playPriority = value;
+            }
         }
-    }
 
-    AudioSource AudioComponent {
-        get { return this.GetComponent<AudioSource>(); }
-    }
-    
-    public bool isReady {
-        get {
+        AudioSource AudioComponent
+        {
+            get { return this.GetComponent<AudioSource>(); }
+        }
 
-            AudioSource audioSrc = AudioComponent;
+        public bool isPlaying
+        {
+            get
+            {
 
-            if (!audioSrc)
-                return false;
+                AudioSource audioSrc = AudioComponent;
 
-            if (_playPriority == PlayPriority.NORMAL || !audioSrc.isPlaying)
-                return true;
-            else
-                return false;
+                if (!audioSrc)
+                    return false;
+
+                if (audioSrc.isPlaying)
+                    return true;
+                else
+                    return false;
+
+            }
+        }
+
+        // Use this for initialization
+        void Start()
+        {
 
         }
-    }
 
-	// Use this for initialization
-	void Start () {
-	    
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	    
-	}
+        // Update is called once per frame
+        void Update()
+        {
 
-    public void PlaySound(AudioClip clip, PlayPriority priority = PlayPriority.NORMAL, float pitch = 1.0f, float volume = 1.0f) {
+        }
 
-        AudioSource audioComp = AudioComponent;
+        public void PlaySound(AudioClip clip, PlayPriority priority = PlayPriority.NORMAL, float volume = 1.0f, float pitch = 1.0f,  bool loop = false)
+        {
 
-        if (audioComp == null)
-            return;
+            AudioSource audioComp = AudioComponent;
+
+            if (audioComp == null || clip == null)
+            {
+                Debug.LogError("Audio component is not ready, or the clip provided is null");
+                return;
+            }
+
+            audioComp.clip = clip;
+            audioComp.pitch = pitch;
+            audioComp.volume = volume;
+            audioComp.loop = loop;
+            _playPriority = priority;
+
+            audioComp.Play();
+
+        }
+
+        public void StopSound()
+        {
+
+            AudioSource audioComp = AudioComponent;
+
+            if (audioComp == null)
+                return;
+
+            audioComp.Stop();
+
+        }
 
     }
 
