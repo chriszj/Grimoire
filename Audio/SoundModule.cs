@@ -36,7 +36,7 @@ namespace GLIB.Audio {
 
         List<SoundChannel> _sfxChannels;
         List<SoundChannel> _bgmChannels;
-        
+
 
         protected override void ProcessInitialization()
         {
@@ -46,7 +46,7 @@ namespace GLIB.Audio {
 
             for (int sc = 0; sc < _maxSFXChannels; sc++) {
 
-                GameObject sfxObj = new GameObject("sfx_"+sc+1);
+                GameObject sfxObj = new GameObject("sfx_" + sc + 1);
                 sfxObj.transform.SetParent(this.gameObject.transform);
 
                 SoundChannel sfxCh = sfxObj.AddComponent<SoundChannel>();
@@ -71,20 +71,15 @@ namespace GLIB.Audio {
 
         protected override void ProcessUpdate()
         {
-            
+
         }
 
         protected override void ProcessTermination()
         {
 
-            // Clear channels
-            foreach (SoundChannel sfxChannel in _sfxChannels)
-                sfxChannel.StopSound();
+            StopAllSounds();
 
             _sfxChannels.Clear();
-
-            foreach (SoundChannel bgmChannel in _bgmChannels)
-                bgmChannel.StopSound();
 
             _bgmChannels.Clear();
 
@@ -113,7 +108,7 @@ namespace GLIB.Audio {
                     throw new Exception("Error: Sound Module has not been initialized.");
 
                 if (clip == null)
-                    throw new Exception ("Error: Clip argument is null");
+                    throw new Exception("Error: Clip argument is null");
 
                 int chIndex = channelIndex;
 
@@ -143,7 +138,7 @@ namespace GLIB.Audio {
                         }
 
                     }
-                    
+
                 }
 
                 if (chIndex >= 0 && chIndex < _sfxChannels.Count)
@@ -225,6 +220,16 @@ namespace GLIB.Audio {
             {
                 Debug.LogError(e.Message + "\n" + e.StackTrace);
             }
+
+        }
+
+        public void StopAllSounds() {
+
+            foreach (SoundChannel sfxChannel in _sfxChannels)
+                sfxChannel.StopSound();
+
+            foreach (SoundChannel bgmChannel in _bgmChannels)
+                bgmChannel.StopSound();
 
         }
 

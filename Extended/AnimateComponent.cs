@@ -13,7 +13,7 @@ namespace GLIB.Extended
     /// Animation component that lets you perform local translation, local rotation, and local scaling. 
     /// Currently only supports one type of transition.
     /// </summary>
-    class AnimateComponent:MonoBehaviour
+    public class AnimateComponent:MonoBehaviour
     {
 
         public delegate void OnTranslationFinishDelegate();
@@ -24,10 +24,17 @@ namespace GLIB.Extended
 
         public delegate void OnScaleFinishDelegate();
         private OnScaleFinishDelegate _onScaleFinish;
-        
+
+        public delegate void OnColorInterpolationFinishDelegate();
+        private OnColorInterpolationFinishDelegate _onColorInterpolationFinish;
+
+        public delegate void OnColorInterpolationUpdateDelegate();
+        private OnColorInterpolationUpdateDelegate _onColorInterpolationUpdate;
+
         private bool _translating;
         private bool _rotating;
         private bool _scaling;
+        private bool _interpolatingColor;
 
         public bool isTranslating {
             get { return _translating; }
@@ -39,6 +46,10 @@ namespace GLIB.Extended
 
         public bool isScaling {
             get { return _scaling; }
+        }
+
+        public bool isInterpolatingColor {
+            get { return _interpolatingColor; }
         }
         
         private float _translationTime;
@@ -56,21 +67,45 @@ namespace GLIB.Extended
         private float _scalePercent;
         private Vector3 _scaleTarget;
 
-        void Start() {
+        private float _colorInterpolationTime;
+        private float _colorInterpolationDuration;
+        private float _colorInterpolationPercent;
+        private Color32 _colorInterpolationStart;
+        private Color32 _colorInterpolationEnd;
+        private Color32 _interpolatedColor;
+        public Color32 interpolatedColor {
+            get { return _interpolatedColor; }
+        }
+
+        void Awake() {
             _translating = false;
             _rotating = false;
             _scaling = false;
+            _interpolatingColor = false;
+        }
+
+        void Start() {
+            
         }
 
         void Update()
         {
+            
+            //Check if it is a UIObject by getting its rectTransform;
+            RectTransform rectTransform = this.gameObject.GetComponent<RectTransform>();
 
             if (_translating) {
 
                 _translationTime += Time.deltaTime;
                 _translationPercent = _translationTime / _translationDuration;
-               // _translationPercent = _translationPercent * _translationPercent * _translationPercent * (_translationPercent * (6f * _translationPercent - 15f) + 10f);
+                // _translationPercent = _translationPercent * _translationPercent * _translationPercent * (_translationPercent * (6f * _translationPercent - 15f) + 10f);
 
+                if (rectTransform)
+                {
+                    rectTransform.anchoredPosition3D = Vector3.Lerp(rectTransform.anchoredPosition3D, _translationTarget, _translationPercent);
+                   
+                }
+                else
                 this.gameObject.transform.localPosition = Vector3.Lerp(this.gameObject.transform.localPosition, _translationTarget, _translationPercent);
 
                 if (_translationPercent >= 1) {
@@ -120,6 +155,27 @@ namespace GLIB.Extended
 
                 }
 
+            }
+
+            if (_interpolatingColor) {
+
+                _colorInterpolationTime += Time.deltaTime;
+                _colorInterpolationPercent = _colorInterpolationTime / _colorInterpolationDuration;
+
+                _interpolatedColor = Color.Lerp(_interpolatedColor, _colorInterpolationEnd, _colorInterpolationPercent);
+
+                if (_onColorInterpolationUpdate != null)
+                    _onColorInterpolationUpdate();
+
+                if (_colorInterpolationPercent >= 1) {
+
+                    _interpolatingColor = false;
+
+                    if (_onColorInterpolationFinish != null)
+                        _onColorInterpolationFinish();
+
+                }
+                                
             }
 
         }
@@ -176,6 +232,27 @@ namespace GLIB.Extended
         }
 
         /// <summary>
+        /// Perform a Color Interpolation from A to B, use InterpolatedColor read property to apply to any object color of you like.
+        /// You may use onUpdate to set the interpolated color to a custom property of yours, but have in mind that this process might be heavy.
+        /// </summary>
+        /// <param name="fadeTo"></param>
+        /// <param name="duration"></param>
+        /// <param name="onFadeFinish"></param>
+        public void InterpolateColor(Color colorA, Color colorB, float duration, OnColorInterpolationUpdateDelegate onUpdate, OnColorInterpolationFinishDelegate onFinish) {
+
+            _interpolatingColor = true;
+
+            _colorInterpolationStart = colorA;
+            _interpolatedColor = _colorInterpolationStart;
+            _colorInterpolationEnd = colorB;
+            _colorInterpolationTime = 0;
+            _colorInterpolationDuration = duration;
+            _onColorInterpolationUpdate = onUpdate;
+            _onColorInterpolationFinish = onFinish;
+
+        }
+
+        /// <summary>
         /// Stops all animations being applied to the object, the object transform won't be reverted to its original values.
         /// That is the object's position, rotation, and scale values won't be reverted to the starting values before animating.
         /// </summary>
@@ -183,6 +260,7 @@ namespace GLIB.Extended
             _translating = false;
             _rotating = false;
             _scaling = false;
+            _interpolatingColor = false;
         }
 
     }
