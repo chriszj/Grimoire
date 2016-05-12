@@ -62,6 +62,7 @@ namespace GLIB.VFX {
 
         /// <summary>
         /// Instantiate particles from a prefab of your choice, particles will be automatically destroyed when finished playing.
+        /// You may leave position default null value in order to instantiate the prefab with its original position. The same goes for the rotation parameter.
         /// Please have in mind that scale is not implemented yet, so be cautious. 
         /// </summary>
         /// <param name="particlesPrefab"></param>
@@ -69,7 +70,7 @@ namespace GLIB.VFX {
         /// <param name="rotation"></param>
         /// <param name="scale"></param>
         /// <param name="parent"></param>
-        public GameObject InstantiateParticles(GameObject particlesPrefab, Vector3 position, Vector3 rotation = new Vector3(), float scale = 1, GameObject parent = null, bool autoDestroy = true)
+        public GameObject InstantiateParticles(GameObject particlesPrefab, Vector3? position = null, Vector3? rotation = null, float scale = 1, GameObject parent = null, bool autoDestroy = true)
         {
 
             try
@@ -80,11 +81,26 @@ namespace GLIB.VFX {
 
                 GameObject particlesInstance = Instantiate(particlesPrefab);
 
+                Vector3 originalPosition = particlesInstance.transform.localPosition;
+
+                Vector3 originalRotation = particlesInstance.transform.localRotation.eulerAngles;
+
                 if (parent != null)
                     particlesInstance.transform.SetParent(parent.transform);
-                                
-                particlesInstance.transform.rotation = Quaternion.Euler(rotation);
-                particlesInstance.transform.position = position;
+
+                // Particle System is not that much affected by its transform.localscale, so we normalize it to prevent position errors.
+                particlesInstance.transform.localScale = new Vector3(1, 1, 1);
+
+
+                if (rotation != null)
+                    particlesInstance.transform.rotation = Quaternion.Euler((Vector3)rotation);
+                else
+                    particlesInstance.transform.localRotation = Quaternion.Euler((Vector3)originalRotation);
+
+                if (position != null)
+                    particlesInstance.transform.position = (Vector3)position;
+                else // If no position was passed then use the original prefab position
+                    particlesInstance.transform.localPosition = originalPosition;
 
                 ParticleMeta meta = new ParticleMeta();
 
