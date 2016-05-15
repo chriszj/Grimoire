@@ -224,6 +224,9 @@ namespace GLIB.Audio {
 
         }
 
+        /// <summary>
+        /// Stops all sounds comming from both SFXChannels and BGMChannels.
+        /// </summary>
         public void StopAllSounds() {
 
             foreach (SoundChannel sfxChannel in _sfxChannels)
@@ -233,6 +236,39 @@ namespace GLIB.Audio {
                 bgmChannel.StopSound();
 
         }
+
+        // Pause a SFX Channel given its index. If a sound is paused it will be treated as is not playing, so be sure to set the appropiate priority flag.
+        public void PauseSFXChannel(int index) {
+
+            if (index < _sfxChannels.Count && index >= 0)
+                _sfxChannels[index].PauseSound();
+
+        }
+
+        // UnPause a SFX Channel given its index.
+        public void UnPauseSFXChannel(int index) {
+
+            if (index < _sfxChannels.Count && index >= 0)
+                _sfxChannels[index].UnPauseSound();
+
+        }
+
+        // Pause a BGM Channel given its index. If a sound is paused it will be treated as is not playing, so be sure to set the appropiate priority flag.
+        public void PauseBGMChannel(int index) {
+
+            if (index < _bgmChannels.Count && index >= 0)
+                _bgmChannels[index].PauseSound();
+
+        }
+
+        // UnPause a BGM Channel given its index.
+        public void UnPauseBGMChannel(int index) {
+
+            if (index < _bgmChannels.Count && index >= 0)
+                _bgmChannels[index].UnPauseSound();
+
+        }
+        
 
     }
 

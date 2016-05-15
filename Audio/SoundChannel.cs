@@ -97,6 +97,28 @@ namespace GLIB.Audio {
 
         }
 
+        public void PauseSound() {
+
+            AudioSource audioComp = AudioComponent;
+
+            if (audioComp == null)
+                return;
+
+            audioComp.Pause();
+
+        }
+
+        public void UnPauseSound() {
+
+            AudioSource audioComp = AudioComponent;
+
+            if (audioComp == null)
+                return;
+
+            audioComp.UnPause();
+
+        }
+
     }
 
 }
