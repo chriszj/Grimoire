@@ -364,14 +364,22 @@ namespace GLIB.Utils {
 		#region Public functions
 
 		/// <summary>
-		/// Shows a simple message with an accept button which only closes the window.
+		/// Shows a simple message with an accept button which if specified execute the OnMessageAccept delegate passed, and closes the window.
 		/// </summary>
-		public void NotifyMessage (string message, Sprite icon = null){
+		public void NotifyMessage (string message, Sprite icon = null, OnMessageAcceptDelegate onAccept = null){
 
 			// Disable progress mode if enabled
 			MessageProgressMode = false;
 
 			OnMessageAccept = Terminate;
+            OnMessageAccept = delegate {
+
+                if (onAccept != null)
+                    onAccept();
+
+                Terminate();
+            };
+
 			OnMessageDecline = null;
 
 			MessageIcon = icon;
