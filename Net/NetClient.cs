@@ -7,7 +7,7 @@ using System.Net;
 using System.ComponentModel;
 using GLIB.Core;
 using GLIB.Extended;
-using GLIB.Data;
+
 
 using System.IO;
 using System.Text;
@@ -57,7 +57,8 @@ namespace GLIB.Net {
 		public float ActiveDownloadProcessPercent {get{return _activeDownloadProcessPercent;}}
 		float _singleFileDownloadProgress;
 
-		int _filesDownloaded = 0;
+        //int _filesDownloaded = 0;
+        List<bool> _filesDownloaded;
 
 		bool _errorOcurred = false;
 
@@ -77,6 +78,17 @@ namespace GLIB.Net {
 		bool _decompressing;
 		List<string> _filesToDecompress = new List<String>();
 
+        public delegate void FileDecompressionMethod(string filePath);
+        private FileDecompressionMethod _fileDecompressionMethod;
+        /// <summary>
+        /// Set the Decompression Method as your desire, your method must raise exceptions!
+        /// </summary>
+        public FileDecompressionMethod fileDecompressionMethod {
+            set {
+                _fileDecompressionMethod = value;
+            }
+        }
+
 		#endregion
 
 		void Awake() {
@@ -87,6 +99,8 @@ namespace GLIB.Net {
 			_activeClient.DownloadProgressChanged += new DownloadProgressChangedEventHandler (OnFileDownloadProgress);
 			_activeClient.UploadValuesCompleted += new UploadValuesCompletedEventHandler (OnUploadValuesCompleted);
 			_activeClient.DownloadStringCompleted += new DownloadStringCompletedEventHandler (OnStringDownloadCompleted);
+
+            _filesDownloaded = new List<bool>();
 		}
 
 
@@ -100,45 +114,49 @@ namespace GLIB.Net {
 		void Update () {
 			
 			if (_downloading) {
-				
-				//Loop through downloadList and download the first file in the download list
-				if (_filesDownloaded < _downloadList.Count) {
 
-					if (_displayProgress) //TODO Localize upcoming line
-						NotificationSystem.Instance.NotifyProgress ("Descargando Datos: " + (int)_activeDownloadProcessPercent + "%");
-						//AlertSystem.Instance.AlertProgress("Descargando Datos: " + (int)_activeDownloadProcessPercent + "%");
-					
-					if (!_activeClient.IsBusy) {
+                if (_displayProgress) //TODO Localize upcoming line
+                    NotificationSystem.Instance.NotifyProgress("Descargando Datos: " + (int)_activeDownloadProcessPercent + "%");
+                //AlertSystem.Instance.AlertProgress("Descargando Datos: " + (int)_activeDownloadProcessPercent + "%");
+                  
 
-						try{
+                if (!_activeClient.IsBusy) {
 
-							RemoteFileMetaData fileToDownload = _downloadList[_filesDownloaded];
+                    lock (_filesDownloaded)
+                    {
 
-							System.Uri url = new System.Uri(fileToDownload.fileURI);
+                        if (_filesDownloaded.Count < _downloadList.Count)
+                        {
 
-							string fileName = _downloadList[_filesDownloaded].savePath +"/"+ (string.IsNullOrEmpty(fileToDownload.saveAsFileName)?Path.GetFileName(url.AbsolutePath):fileToDownload.saveAsFileName);
+                            try
+                            {
 
-							Debug.Log("Downloading file "+ fileName +" at: "+url.AbsoluteUri);
+                                Debug.Log("Downloading File: " + (_filesDownloaded.Count + 1) + " / " + _downloadList.Count);
+                                RemoteFileMetaData fileToDownload = _downloadList[_filesDownloaded.Count];
+                                System.Uri url = new System.Uri(fileToDownload.fileURI);
+                                string fileName = _downloadList[_filesDownloaded.Count].savePath + "/" + (string.IsNullOrEmpty(fileToDownload.saveAsFileName) ? Path.GetFileName(url.AbsolutePath) : fileToDownload.saveAsFileName);
+                                Debug.Log("Downloading file " + fileName + " at: " + url.AbsoluteUri);
+                                _activeClient.DownloadFileAsync(url, fileName);
 
-							_activeClient.DownloadFileAsync(url, fileName);
-						}
-						catch (Exception e)
-						{
-							//Skip the download and trigger error, 
-							Debug.LogError(e.Message);
-							_filesDownloaded ++;
-							_errorOcurred = true;
-						}
+                            }
+                            catch (Exception e)
+                            {
+                                //Skip the download and trigger error, 
+                                Debug.LogError(e.Message + "\n" + e.StackTrace);
+                                _filesDownloaded.Add(false);
+                                _errorOcurred = true;
+                            }
 
-					}
-					
-				} else {
-					
-					// Clear download list
-					if (_downloadList.Count > 0) {
+                        }
 
-						//for IOS only set no backup flag 
-						#if UNITY_IOS
+                    }
+
+                }
+
+                if (_filesDownloaded.Count >= _downloadList.Count && _downloadList.Count > 0) {
+
+                    //for IOS only set no backup flag 
+                    #if UNITY_IOS
 
 						foreach(RemoteFileMetaData fileMeta in _downloadList)
 						{
@@ -150,18 +168,12 @@ namespace GLIB.Net {
 							}
 
 						}
-						#endif
+                    #endif
 
-						_downloadList.Clear ();
-						_filesDownloaded = 0;
-						
-						//if (_displayProgress)
-							//NotificationSystem.Instance.Terminate ();
-							//AlertSystem.Instance.CloseAlert();
+                    _downloadList.Clear();
+                    _filesDownloaded.Clear();
 
-					}
-					
-				}
+                }
 				
 			}
 		}
@@ -301,7 +313,7 @@ namespace GLIB.Net {
 
 			_activeClient.Dispose();
 
-			RemoteFileMetaData fetchedFileMetaData = _downloadList[_filesDownloaded];
+			RemoteFileMetaData fetchedFileMetaData = _downloadList[_filesDownloaded.Count];
 
 			string filePath = fetchedFileMetaData.savePath +"/"+ (string.IsNullOrEmpty(fetchedFileMetaData.saveAsFileName)?Path.GetFileName(fetchedFileMetaData.fileURI):fetchedFileMetaData.saveAsFileName);
 
@@ -316,7 +328,7 @@ namespace GLIB.Net {
 					Debug.LogError ("Failed Downloading File At URL: " + fetchedFileMetaData.fileURI + "\n" + e.Error.Message);
 
 					// there was an error in the server-client request so we must skip the file!
-					_filesDownloaded ++;
+					_filesDownloaded.Add(false);
 					return;
 				}
 
@@ -325,16 +337,22 @@ namespace GLIB.Net {
 				return;
 			}
 
-			if (fetchedFileMetaData.requireDecompresion)
-				_filesToDecompress.Add (filePath);
+            // If decompression method is null then files to be decompressed won't be added at all.
+            if (fetchedFileMetaData.requireDecompresion)
+            {
+                if (_fileDecompressionMethod != null)
+                    _filesToDecompress.Add(filePath);
+                else
+                    Debug.LogWarning("No Decompression Method Found, please assign on by using the fileDecompressionMethod property");
+            }
 
-			_filesDownloaded ++;
+            _filesDownloaded.Add(true);
 						
 		}
 		
 		void OnFileDownloadProgress(object sender, ProgressChangedEventArgs e){
 			
-			_activeDownloadProcessPercent = ((e.ProgressPercentage / 100.0f) + _filesDownloaded)/_downloadList.Count*100;
+			_activeDownloadProcessPercent = ((e.ProgressPercentage / 100.0f) + _filesDownloaded.Count)/_downloadList.Count*100;
 		
 			_singleFileDownloadProgress = e.ProgressPercentage;
 
@@ -360,11 +378,14 @@ namespace GLIB.Net {
 			for(int i = 0; i < _filesToDecompress.Count; i++) {
 
 				if(_displayProgress) //TODO Localize upcoming line
-					NotificationSystem.Instance.NotifyProgress("Descomprimiendo Datos:\n" + (int)((i/100.0f)/_filesToDecompress.Count) + "%");
+					NotificationSystem.Instance.NotifyProgress("Decompressing Data:\n" + (int)((i/100.0f)/_filesToDecompress.Count) + "%");
 					//AlertSystem.Instance.AlertProgress("Descomprimiendo Datos:\n" + (int)((i/100.0f)/_filesToDecompress.Count) + "%");
 
 				try{
-					DataManager.Instance.DecompressFile(_filesToDecompress[i], true);
+                    
+                    if (_fileDecompressionMethod != null)
+                        _fileDecompressionMethod(_filesToDecompress[i]);
+
 				}
 				catch(Exception e){
 					Debug.LogError(e.Message);

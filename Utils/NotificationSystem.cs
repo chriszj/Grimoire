@@ -59,7 +59,7 @@ namespace GLIB.Utils {
 
 					_messageWindow.sizeDelta = windowSize;
 
-					Debug.Log (_messageWindow.sizeDelta);
+					//Debug.Log (_messageWindow.sizeDelta);
 				}
 			}
 		}
