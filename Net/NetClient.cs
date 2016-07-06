@@ -65,12 +65,12 @@ namespace GLIB.Net {
 		bool _downloading = false;
 		public bool IsDownloading {get{return _downloading;}}
 
-		public delegate void OnFilesDownloadDoneDelegate();
+		/*public delegate void OnFilesDownloadDoneDelegate();
 		OnFilesDownloadDoneDelegate _onFilesDownloadDone;
 
 		public delegate void OnFilesDownloadFailDelegate();
 		OnFilesDownloadFailDelegate _onFilesDownloadFail;
-
+        */
 		#endregion
 
 		#region DecompressionQueue
@@ -421,7 +421,7 @@ namespace GLIB.Net {
 
 		}
 
-		public IEnumerator DownloadFiles( OnFilesDownloadDoneDelegate onSuccess = null, OnFilesDownloadFailDelegate onFail = null, bool displayDownloadProgress = true ){
+		public IEnumerator DownloadFiles( Action onSuccess = null, Action onFail = null, bool displayDownloadProgress = true ){
 			//Data Download
 			var routine = this.StartCoroutine<bool> ( NetClient.Instance.ProcessDownloads (displayDownloadProgress));
 			
