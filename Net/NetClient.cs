@@ -40,24 +40,34 @@ namespace GLIB.Net {
 
 		public delegate void OnWebRequestDoneDelegate(string stringRequested);
 		OnWebRequestDoneDelegate _onWebRequestDone;
-		//public OnWebRequestDoneDelegate OnWebRequestDone {get{return _onWebRequestDone;} set{_onWebRequestDone = value;}}
 
 		public delegate void OnWebRequestFailDelegate();
 		OnWebRequestFailDelegate _onWebRequestFail;
-		//public OnWebRequestFailDelegate OnWebRequestFail {get{return _onWebRequestFail;} set{_onWebRequestFail = value;}}
-
-		bool _displayProgress;
-
-		#endregion
+        
+        #endregion
 
 		#region FileDownload properties
 		List<RemoteFileMetaData> _downloadList = new List<RemoteFileMetaData>();
 		WebClient _activeClient;
-		float _activeDownloadProcessPercent;
-		public float ActiveDownloadProcessPercent {get{return _activeDownloadProcessPercent;}}
-		float _singleFileDownloadProgress;
+		float _allFilesDownloadProgress;
+		public float allFilesDownloadProgress {get{ return _allFilesDownloadProgress; } }
 
-        //int _filesDownloaded = 0;
+        float _singleFileDownloadProgress;
+        public float currentFileDownloadProgress { get { return _singleFileDownloadProgress; } }
+
+        // For TimeOut Exception
+        float _singleFileDownloadPrevProgress;
+        float _secondsWithoutFileDownloadResponse;
+        float _maxSecondsWithoutFileDownloadResponse = 10.0f;
+        public float maxSecondsWithoutFileDownloadResponse { get { return _maxSecondsWithoutFileDownloadResponse; } set { _maxSecondsWithoutFileDownloadResponse = value; } }
+        int _singleFileDownloadRetries;
+        int _maxSingleFileDownloadRetries = 1;
+        public int maxSingleFileDownloadRetries { get { return _maxSingleFileDownloadRetries; } set { _maxSingleFileDownloadRetries = value; } }
+        //
+
+        float _allFilesDecompressProgress;
+        public float allFilesDecompress { get { return _allFilesDecompressProgress; } }
+        
         List<bool> _filesDownloaded;
 
 		bool _errorOcurred = false;
@@ -65,12 +75,6 @@ namespace GLIB.Net {
 		bool _downloading = false;
 		public bool IsDownloading {get{return _downloading;}}
 
-		/*public delegate void OnFilesDownloadDoneDelegate();
-		OnFilesDownloadDoneDelegate _onFilesDownloadDone;
-
-		public delegate void OnFilesDownloadFailDelegate();
-		OnFilesDownloadFailDelegate _onFilesDownloadFail;
-        */
 		#endregion
 
 		#region DecompressionQueue
@@ -115,21 +119,20 @@ namespace GLIB.Net {
 			
 			if (_downloading) {
 
-                if (_displayProgress) //TODO Localize upcoming line
-                    NotificationSystem.Instance.NotifyProgress("Descargando Datos: " + (int)_activeDownloadProcessPercent + "%");
-                //AlertSystem.Instance.AlertProgress("Descargando Datos: " + (int)_activeDownloadProcessPercent + "%");
-                  
-
-                if (!_activeClient.IsBusy) {
-
-                    lock (_filesDownloaded)
+                try
+                {
+                    if (!_activeClient.IsBusy)
                     {
 
-                        if (_filesDownloaded.Count < _downloadList.Count)
+                        lock (_filesDownloaded)
                         {
 
-                            try
+                            if (_filesDownloaded.Count < _downloadList.Count)
                             {
+
+                                // Reset timeout and retries
+                                _secondsWithoutFileDownloadResponse = _maxSecondsWithoutFileDownloadResponse;
+                                _singleFileDownloadRetries = _maxSingleFileDownloadRetries;
 
                                 Debug.Log("Downloading File: " + (_filesDownloaded.Count + 1) + " / " + _downloadList.Count);
                                 RemoteFileMetaData fileToDownload = _downloadList[_filesDownloaded.Count];
@@ -138,25 +141,56 @@ namespace GLIB.Net {
                                 Debug.Log("Downloading file " + fileName + " at: " + url.AbsoluteUri);
                                 _activeClient.DownloadFileAsync(url, fileName);
 
-                            }
-                            catch (Exception e)
-                            {
-                                //Skip the download and trigger error, 
-                                Debug.LogError(e.Message + "\n" + e.StackTrace);
-                                _filesDownloaded.Add(false);
-                                _errorOcurred = true;
+
                             }
 
                         }
 
                     }
+                    else
+                    {
+                        // Timeout handling
+                        if (_singleFileDownloadPrevProgress == _singleFileDownloadProgress && _secondsWithoutFileDownloadResponse > 0)
+                        {
+
+                            _secondsWithoutFileDownloadResponse -= Time.deltaTime;
+
+                            if (_secondsWithoutFileDownloadResponse < 0)
+                            {
+
+                                _secondsWithoutFileDownloadResponse = _maxSecondsWithoutFileDownloadResponse;
+                                // Cancel download
+                                _activeClient.CancelAsync();
+
+                                _singleFileDownloadRetries--;
+                                if (_singleFileDownloadRetries < 0)
+                                {
+                                    _singleFileDownloadRetries = _maxSingleFileDownloadRetries;
+                                    throw new Exception("Could not download file, timeout exceed exception and number of retries exceeded.");
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+                }
+                catch (Exception e) {
+
+                    //Skip the download and trigger error, 
+                    Debug.LogError(e.Message + "\n" + e.StackTrace);
+                    _filesDownloaded.Add(false);
+                    _errorOcurred = true;
 
                 }
+                finally {
 
-                if (_filesDownloaded.Count >= _downloadList.Count && _downloadList.Count > 0) {
+                    if (_filesDownloaded.Count >= _downloadList.Count && _downloadList.Count > 0)
+                    {
 
-                    //for IOS only set no backup flag 
-                    #if UNITY_IOS
+                        //for IOS only set no backup flag 
+                        #if UNITY_IOS
 
 						foreach(RemoteFileMetaData fileMeta in _downloadList)
 						{
@@ -168,14 +202,17 @@ namespace GLIB.Net {
 							}
 
 						}
-                    #endif
+                        #endif
 
-                    _downloadList.Clear();
-                    _filesDownloaded.Clear();
+                        _downloadList.Clear();
+                        _filesDownloaded.Clear();
+
+                    }
 
                 }
 				
 			}
+
 		}
 
 		public bool InternetConnectivity (){
@@ -263,7 +300,6 @@ namespace GLIB.Net {
 			else
 				_remoteString = e.Result;
 			
-		
 		}
 
 		#region FileDownload Methods
@@ -333,7 +369,7 @@ namespace GLIB.Net {
 				}
 
 				// The file must be redownloaded!
-				Debug.LogError("WebClient Bug Reproduced, processing workaround: redownloading the file.");
+				Debug.LogError("the file: "+filePath+" has not been downloaded completely. Trying to re-download the file.");
 				return;
 			}
 
@@ -351,18 +387,20 @@ namespace GLIB.Net {
 		}
 		
 		void OnFileDownloadProgress(object sender, ProgressChangedEventArgs e){
-			
-			_activeDownloadProcessPercent = ((e.ProgressPercentage / 100.0f) + _filesDownloaded.Count)/_downloadList.Count*100;
+
+            _allFilesDownloadProgress = ((e.ProgressPercentage / 100.0f) + _filesDownloaded.Count)/_downloadList.Count*100;
 		
 			_singleFileDownloadProgress = e.ProgressPercentage;
+
+            _singleFileDownloadPrevProgress = _singleFileDownloadProgress;
 
 		}
 		
 		// Yielded Capable function!
 		// Can be used to continue with other stuff until downloads has finished!
-		public IEnumerator ProcessDownloads(bool displayProgress = true){
+		IEnumerator ProcessDownloads(){
 
-			_displayProgress = displayProgress;
+			//_displayProgress = displayProgress;
 
 			_downloading = true;
 			
@@ -373,21 +411,19 @@ namespace GLIB.Net {
 			}
 
 			bool errorDecompressing = false;
-
-
+            
 			for(int i = 0; i < _filesToDecompress.Count; i++) {
-
-				if(_displayProgress) //TODO Localize upcoming line
-					NotificationSystem.Instance.NotifyProgress("Decompressing Data:\n" + (int)((i/100.0f)/_filesToDecompress.Count) + "%");
-					//AlertSystem.Instance.AlertProgress("Descomprimiendo Datos:\n" + (int)((i/100.0f)/_filesToDecompress.Count) + "%");
 
 				try{
                     
                     if (_fileDecompressionMethod != null)
                         _fileDecompressionMethod(_filesToDecompress[i]);
-
-				}
+                    
+                    _allFilesDecompressProgress = (i / 100.0f) / _filesToDecompress.Count;
+                
+                }
 				catch(Exception e){
+
 					Debug.LogError(e.Message);
 					errorDecompressing = true;
 
@@ -397,16 +433,14 @@ namespace GLIB.Net {
 				}
 
 			}
-
-			//if (_displayProgress)
-				//NotificationSystem.Instance.Terminate ();
-				//AlertSystem.Instance.CloseAlert ();
-
+            			
 			_filesToDecompress = new List<String> ();
 
 			_downloadList = new List<RemoteFileMetaData>();
-						
-			if (_errorOcurred || errorDecompressing) {
+
+            _downloading = false;
+
+            if (_errorOcurred || errorDecompressing) {
 
 				string errMessage = (_errorOcurred?"Failed to download Files.":"")+(errorDecompressing?"Failed to decompress files.":"");
 
@@ -415,15 +449,13 @@ namespace GLIB.Net {
 
 				throw new Exception(errMessage);
 			}
-			
-			_downloading = false;
 
+        }
 
-		}
+		public IEnumerator DownloadFiles( Action onSuccess = null, Action onFail = null ){
 
-		public IEnumerator DownloadFiles( Action onSuccess = null, Action onFail = null, bool displayDownloadProgress = true ){
 			//Data Download
-			var routine = this.StartCoroutine<bool> ( NetClient.Instance.ProcessDownloads (displayDownloadProgress));
+			var routine = this.StartCoroutine<bool> ( NetClient.Instance.ProcessDownloads());
 			
 			yield return routine.coroutine;
 			
