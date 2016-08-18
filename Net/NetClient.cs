@@ -43,6 +43,9 @@ namespace GLIB.Net {
 
 		public delegate void OnWebRequestFailDelegate();
 		OnWebRequestFailDelegate _onWebRequestFail;
+
+        float _webRequestMaxTimeOut = 20.0f;
+        float _webRequestTimeToTimeOut = 0;
         
         #endregion
 
@@ -58,7 +61,7 @@ namespace GLIB.Net {
         // For TimeOut Exception
         float _singleFileDownloadPrevProgress;
         float _secondsWithoutFileDownloadResponse;
-        float _maxSecondsWithoutFileDownloadResponse = 10.0f;
+        float _maxSecondsWithoutFileDownloadResponse = 20.0f;
         public float maxSecondsWithoutFileDownloadResponse { get { return _maxSecondsWithoutFileDownloadResponse; } set { _maxSecondsWithoutFileDownloadResponse = value; } }
         int _singleFileDownloadRetries;
         int _maxSingleFileDownloadRetries = 1;
@@ -232,13 +235,28 @@ namespace GLIB.Net {
 
 		public IEnumerator MakeWebRequest(string uri, NameValueCollection parameters, OnWebRequestDoneDelegate onWebRequestDoneFunction = null, OnWebRequestFailDelegate onWebRequestFailFunction = null){
 
+            _webRequestTimeToTimeOut = _webRequestMaxTimeOut;
+
 			_onWebRequestDone = onWebRequestDoneFunction;
 			_onWebRequestFail = onWebRequestFailFunction;
 					
 			var remoteStringRoutine = this.StartCoroutine<string>(SendWebRequest(uri, parameters));
-			yield return remoteStringRoutine.coroutine;
-			
+
+            bool timeOutException = false;
+
+            if (_webRequestTimeToTimeOut > 0) {
+                _webRequestTimeToTimeOut -= Time.deltaTime;
+                yield return remoteStringRoutine.coroutine;
+            }
+            else {
+                timeOutException = true;
+            }
+
 			try {
+
+                if (timeOutException)
+                    throw new TimeoutException("Exceeded time making web request");
+
 				string result = remoteStringRoutine.Value;
 
 				if(_onWebRequestDone != null)
@@ -255,7 +273,7 @@ namespace GLIB.Net {
 
 		}
 
-		public IEnumerator SendWebRequest (string uri, NameValueCollection parameters)
+		IEnumerator SendWebRequest (string uri, NameValueCollection parameters)
 		{
 
 			_remoteString = null;
