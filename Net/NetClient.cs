@@ -51,7 +51,7 @@ namespace GLIB.Net {
 
 		#region FileDownload properties
 		List<RemoteFileMetaData> _downloadList = new List<RemoteFileMetaData>();
-		WebClient _activeClient;
+		GrimoireWebClient _activeClient;
 		float _allFilesDownloadProgress;
 		public float allFilesDownloadProgress {get{ return _allFilesDownloadProgress; } }
 
@@ -101,7 +101,7 @@ namespace GLIB.Net {
 		void Awake() {
 			gameObject.GroupIntoBackModuleObject ();
 
-			_activeClient = new WebClient ();
+			_activeClient = new GrimoireWebClient ();
 			_activeClient.DownloadFileCompleted += new AsyncCompletedEventHandler(OnFileDownload);
 			_activeClient.DownloadProgressChanged += new DownloadProgressChangedEventHandler (OnFileDownloadProgress);
 			_activeClient.UploadValuesCompleted += new UploadValuesCompletedEventHandler (OnUploadValuesCompleted);
