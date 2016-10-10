@@ -6,6 +6,8 @@ using GLIB.Core;
 using GLIB.Extended;
 using GLIB.Utils;
 
+// TODO finish optimizations, why use list instead of using dictionary, dictionaries would be better!
+
 /// <summary>
 /// Use this to transform a class into a UI singleton module.
 /// </summary>
@@ -88,17 +90,12 @@ namespace GLIB.Interface {
 		/// <summary>
 		/// Store original alpha values
 		/// </summary>
-		List<float> _rawImageAlphaValues = new List<float>();
-		List<float> _imageAlphaValues = new List<float>();
-		List<float> _textAlphaValues = new List<float>(); 
-
-		/// <summary>
-		/// Get components with color property
-		/// </summary>
-		RawImage[] _rawImageComponents;
-		Image[] _imageComponents;
-		Text[] _textComponents;
-
+        Dictionary<RawImage, float> _rawImageAlphaValues = new Dictionary<RawImage, float>();
+        Dictionary<Image, float> _imageAlphaValues = new Dictionary<Image, float>();
+        Dictionary<Text, float> _textAlphaValues = new Dictionary<Text, float>();
+        Dictionary<Shadow, float> _uiShadowValues = new Dictionary<Shadow, float>();
+        Dictionary<Outline, float> _uiOutlineValues = new Dictionary<Outline, float>();
+		
 
 		/* Animations */
 
@@ -253,61 +250,51 @@ namespace GLIB.Interface {
 							Vector3 nscale = Vector3.Lerp (fscale, tscale, _inOutTransition.animationPercent);
 							_displayObject.transform.localScale = nscale;
 
-							for(int ri = 0; ri < _rawImageComponents.Length; ri++){
+                            foreach (KeyValuePair<RawImage, float> entry in _rawImageAlphaValues) {
 
-								RawImage rImgComp = _rawImageComponents[ri];
+                                Color ncolor = entry.Key.color;
+                                ncolor.a = entry.Value;
 
-								Color rncolor = rImgComp.color;
-								rncolor.a = _rawImageAlphaValues[ri];
+                                entry.Key.color = Color.Lerp(entry.Key.color, ncolor, _inOutTransition.animationPercent);
 
-								rImgComp.color = Color.Lerp(rImgComp.color, rncolor, _inOutTransition.animationPercent);
+                            }
 
-							}
+                            foreach (KeyValuePair<Image, float> entry in _imageAlphaValues) {
 
-							for(int i = 0; i < _imageComponents.Length; i++){
+                                Color ncolor = entry.Key.color;
+                                ncolor.a = entry.Value;
 
-								Image imgComp = _imageComponents[i];
+                                entry.Key.color = Color.Lerp(entry.Key.color, ncolor, _inOutTransition.animationPercent);
 
-								Color ncolor = imgComp.color;
-								ncolor.a = _imageAlphaValues[i];
+                            }
 
-								imgComp.color = Color.Lerp(imgComp.color, ncolor, _inOutTransition.animationPercent);
+                            foreach (KeyValuePair<Text, float> entry in _textAlphaValues) {
 
-							}
+                                Color ncolor = entry.Key.color;
+                                ncolor.a = entry.Value;
 
-							for(int t = 0; t < _textComponents.Length; t++){
+                                entry.Key.color = Color.Lerp(entry.Key.color, ncolor, _inOutTransition.animationPercent);
 
-								Text textComp = _textComponents[t];
+                            }
 
-								Color tncolor = textComp.color;
-								tncolor.a = _textAlphaValues[t];
+                            foreach (KeyValuePair<Shadow, float> entry in _uiShadowValues) {
 
-								textComp.color = Color.Lerp(textComp.color, tncolor, _inOutTransition.animationPercent);
+                                Color ncolor = entry.Key.effectColor;
+                                ncolor.a = entry.Value;
 
-							}
+                                entry.Key.effectColor = Color.Lerp(entry.Key.effectColor, ncolor, _inOutTransition.animationPercent);
 
+                            }
 
-							/*Image[] imgs = _displayObject.GetComponentsInChildren<Image> ();
+                            foreach (KeyValuePair<Outline, float> entry in _uiOutlineValues) {
+
+                                Color ncolor = entry.Key.effectColor;
+                                ncolor.a = entry.Value;
+
+                                entry.Key.effectColor = Color.Lerp(entry.Key.effectColor, ncolor, _inOutTransition.animationPercent);
+
+                            }
 														
-							Text[] texts = _displayObject.GetComponentsInChildren<Text> ();
-
-							foreach (Image img in imgs) {
-
-								Color32 ncolor = img.color;
-								ncolor.a = 255;
-								
-								img.color = Color32.Lerp (img.color, ncolor, _inOutTransition.animationPercent);
-							}
-							
-							foreach (Text text in texts) {
-								
-								Color32 tncolor = text.color;
-								tncolor.a = 255;
-								
-								text.color = Color32.Lerp (text.color, tncolor, _inOutTransition.animationPercent);
-								
-							}*/
-							
 							if (_inOutTransition.animationPercent <= 1){
 								_inOutTransition.animationPercent += Time.deltaTime / _inOutTransition.animationDuration;
 							}
@@ -340,7 +327,13 @@ namespace GLIB.Interface {
 							
 							Text[] texts = DisplayObject.GetComponentsInChildren<Text> ();
 
-							foreach (RawImage rImg in rImgs){
+                            Shadow[] uiShadows = DisplayObject.GetComponentsInChildren<Shadow>();
+
+                            Outline[] uiOutlines = DisplayObject.GetComponentsInChildren<Outline>();
+
+                            Animator[] animators = DisplayObject.GetComponentsInChildren<Animator>();
+
+                            foreach (RawImage rImg in rImgs){
 
 								Color32 rncolor = rImg.color;
 								rncolor.a = 0;
@@ -365,7 +358,29 @@ namespace GLIB.Interface {
 								text.color = Color32.Lerp (text.color, tncolor, _inOutTransition.animationPercent);
 								
 							}
-							
+
+                            foreach (Shadow shadow in uiShadows) {
+
+                                Color32 sncolor = shadow.effectColor;
+                                sncolor.a = 0;
+
+                                shadow.effectColor = Color32.Lerp(shadow.effectColor, sncolor, _inOutTransition.animationPercent);
+
+                            }
+
+                            foreach (Outline outline in uiOutlines) {
+
+                                Color32 oncolor = outline.effectColor;
+                                oncolor.a = 0;
+
+                                outline.effectColor = Color32.Lerp(outline.effectColor, oncolor, _inOutTransition.animationPercent);
+
+                            }
+
+                            // All animator components should be disabled in order to modify alpha values when doing transition out.
+                            foreach (Animator animator in animators)
+                                animator.enabled = false;
+                            							
 							if (_inOutTransition.animationPercent <= 1){
 								_inOutTransition.animationPercent += Time.deltaTime / _inOutTransition.animationDuration;
 							}
@@ -531,61 +546,30 @@ namespace GLIB.Interface {
 					                                                  _inOutOriginalScale.y * _inOutTransition.animationDeform,
 					                                                  _inOutOriginalScale.z * _inOutTransition.animationDeform);
 
-					_rawImageComponents = _displayObject.GetComponentsInChildren<RawImage>();
+                    // Store all RawImages alpha values
+					RawImage[] rawImageComponents = _displayObject.GetComponentsInChildren<RawImage>();
+                    _rawImageAlphaValues.Clear();
+                    foreach (RawImage rawImage in rawImageComponents)
+                        _rawImageAlphaValues.Add(rawImage, rawImage.color.a);
+                           
+                    // Store all Images alpha values         
+					Image[] imageComponents = _displayObject.GetComponentsInChildren<Image>();
+                    _imageAlphaValues.Clear();
+                    foreach (Image image in imageComponents)
+                        _imageAlphaValues.Add(image, image.color.a);
 
-					for(int ri = 0; ri < _rawImageComponents.Length; ri++){
+                    // Store all Texts alpha values
+					Text[] textComponents = _displayObject.GetComponentsInChildren<Text>();
+                    _textAlphaValues.Clear();
+                    foreach (Text text in textComponents)
+                        _textAlphaValues.Add(text, text.color.a);
 
-						if(_rawImageAlphaValues.Count <= ri)
-							_rawImageAlphaValues.Add(_rawImageComponents[ri].color.a);
-
-						Color32 rncolor = _rawImageComponents[ri].color;
-						rncolor.a = 0;
-						_rawImageComponents[ri].color = rncolor;
-
-					}
-
-					_imageComponents = _displayObject.GetComponentsInChildren<Image>();
-
-					for(int i = 0; i < _imageComponents.Length; i++){
-
-						if(_imageAlphaValues.Count <= i)
-							_imageAlphaValues.Add(_imageComponents[i].color.a);
-
-						Color32 ncolor = _imageComponents[i].color;
-						ncolor.a = 0;
-						_imageComponents[i].color = ncolor;
-
-					}
-
-					_textComponents = _displayObject.GetComponentsInChildren<Text>();
-
-					for (int t = 0; t < _textComponents.Length; t++){
-
-						if(_textAlphaValues.Count <= t)
-							_textAlphaValues.Add(_textComponents[t].color.a);
-
-						Color32 tncolor = _textComponents[t].color;
-						tncolor.a = 0;
-						_textComponents[t].color = tncolor;
-
-					}
-
-					/*
-					Image[] imgs = _displayObject.GetComponentsInChildren<Image>();
-
-					foreach(Image img in imgs){
-						Color32 ncolor = img.color;
-						ncolor.a = 0;
-						img.color = ncolor;
-					}
-				
-					Text[] texts = _displayObject.GetComponentsInChildren<Text>();
-
-					foreach(Text text in texts){
-						Color32 tncolor = text.color;
-						tncolor.a = 0;
-						text.color = tncolor;
-					}*/
+                    // Store all UI Shadows alpha values
+                    Shadow[] shadows = _displayObject.GetComponentsInChildren<Shadow>();
+                    _uiShadowValues.Clear();
+                    foreach (Shadow shadow in shadows)
+                        _uiShadowValues.Add(shadow, shadow.effectColor.a);
+                                       					
 
 				}
 
