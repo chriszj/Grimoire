@@ -268,7 +268,37 @@ namespace GLIB.Audio {
                 _bgmChannels[index].UnPauseSound();
 
         }
-        
+
+        /// <summary>
+        /// Retrieves a SFX channel by its id.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public SoundChannel GetSFXChannel(int index) {
+
+            SoundChannel sfxChannel = null;
+
+            if (index < _sfxChannels.Count && index >= 0)
+                sfxChannel = _sfxChannels[index];
+
+            return sfxChannel;
+        }
+
+        /// <summary>
+        /// Retrieves a BGM Channel by its Id.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public SoundChannel GetBGMChannel(int index) {
+
+            SoundChannel bgmChannel = null;
+
+            if (index < _bgmChannels.Count && index >= 0)
+                bgmChannel = _bgmChannels[index];
+
+            return bgmChannel;
+
+        }        
 
     }
 

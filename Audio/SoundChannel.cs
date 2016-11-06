@@ -34,6 +34,21 @@ namespace GLIB.Audio {
             get { return this.GetComponent<AudioSource>(); }
         }
 
+        public float Pitch {
+            get {
+                AudioSource audioSrc = AudioComponent;
+                if (audioSrc != null)
+                    return audioSrc.pitch;
+                else
+                    return -1;
+            }
+            set {
+                AudioSource audioSrc = AudioComponent;
+                if (audioSrc != null)
+                    audioSrc.pitch = value;
+            }
+        }
+
         public bool isPlaying
         {
             get
