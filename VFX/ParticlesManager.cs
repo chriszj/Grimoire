@@ -98,7 +98,7 @@ namespace GLIB.VFX {
                     particlesInstance.transform.localRotation = Quaternion.Euler((Vector3)originalRotation);
 
                 if (position != null)
-                    particlesInstance.transform.position = (Vector3)position;
+                    particlesInstance.transform.localPosition = (Vector3)position;
                 else // If no position was passed then use the original prefab position
                     particlesInstance.transform.localPosition = originalPosition;
 

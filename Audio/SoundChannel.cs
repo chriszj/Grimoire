@@ -49,6 +49,23 @@ namespace GLIB.Audio {
             }
         }
 
+        public float Volume {
+            get
+            {
+                AudioSource audioSrc = AudioComponent;
+                if (audioSrc != null)
+                    return audioSrc.volume;
+                else
+                    return -1;
+            }
+            set
+            {
+                AudioSource audioSrc = AudioComponent;
+                if (audioSrc != null)
+                    audioSrc.volume = value;
+            }
+        }
+
         public bool isPlaying
         {
             get
