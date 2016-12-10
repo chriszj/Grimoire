@@ -38,6 +38,11 @@ namespace GLIB.Audio {
         List<SoundChannel> _sfxChannels;
         List<SoundChannel> _bgmChannels;
 
+        List<SoundChannel> _currentlyPlayingSFXChannels;
+        List<SoundChannel> _currentlyPlayingBGMChannels;
+
+        Dictionary<SoundChannel, float> _sfxChannelsOriginalVolumes;
+        Dictionary<SoundChannel, float> _bgmChannelsOriginalVolumes;
 
         protected override void ProcessInitialization()
         {
@@ -268,7 +273,176 @@ namespace GLIB.Audio {
                 _bgmChannels[index].UnPauseSound();
 
         }
-        
+
+        /// <summary>
+        /// Retrieves a SFX channel by its id.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public SoundChannel GetSFXChannel(int index) {
+
+            SoundChannel sfxChannel = null;
+
+            if (index < _sfxChannels.Count && index >= 0)
+                sfxChannel = _sfxChannels[index];
+
+            return sfxChannel;
+        }
+
+        /// <summary>
+        /// Retrieves a BGM Channel by its Id.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public SoundChannel GetBGMChannel(int index) {
+
+            SoundChannel bgmChannel = null;
+
+            if (index < _bgmChannels.Count && index >= 0)
+                bgmChannel = _bgmChannels[index];
+
+            return bgmChannel;
+
+        }
+
+        /// <summary>
+        /// Pauses all currently playing SFX channels;
+        /// </summary>
+        public void PauseAllPlayingSFXChannels() {
+
+            _currentlyPlayingSFXChannels = new List<SoundChannel>();
+
+            foreach (SoundChannel sound in _sfxChannels) {
+
+                if (sound.isPlaying)
+                {
+                    _currentlyPlayingSFXChannels.Add(sound);
+                    sound.PauseSound();
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// Resume all previously paused SFX channels
+        /// </summary>
+        public void UnPauseAllPreviouslyPlayingSFXChannels() {
+
+            if (_currentlyPlayingSFXChannels != null)
+            {
+                foreach (SoundChannel sound in _currentlyPlayingSFXChannels)
+                    sound.UnPauseSound();
+
+                _currentlyPlayingSFXChannels.Clear();
+            }
+                       
+        }
+
+        /// <summary>
+        /// Pauses all currently playing BGM channels;
+        /// </summary>
+        public void PauseAllPlayingBGMChannels()
+        {
+
+            _currentlyPlayingBGMChannels = new List<SoundChannel>();
+
+            foreach (SoundChannel sound in _bgmChannels)
+            {
+
+                if (sound.isPlaying)
+                {
+                    _currentlyPlayingBGMChannels.Add(sound);
+                    sound.PauseSound();
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// Resume all previously paused BGM channels
+        /// </summary>
+        public void UnPauseAllPreviouslyPlayingBGMChannels()
+        {
+
+            if (_currentlyPlayingBGMChannels != null)
+            {
+                foreach (SoundChannel sound in _currentlyPlayingBGMChannels)
+                    sound.UnPauseSound();
+
+                _currentlyPlayingBGMChannels.Clear();
+            }
+
+        }
+
+        /// <summary>
+        /// Mute all current sfx channels
+        /// </summary>
+        public void MuteSFXChannels() {
+
+            _sfxChannelsOriginalVolumes = new Dictionary<SoundChannel, float>();
+
+            foreach (SoundChannel sound in _sfxChannels)
+            {
+                _sfxChannelsOriginalVolumes.Add(sound, sound.Volume);
+                sound.Volume = 0;
+            }
+
+        }
+
+        /// <summary>
+        /// Restores all previous sfx channels volumes.
+        /// </summary>
+        public void UnMuteSFXChannels() {
+
+            if (_sfxChannelsOriginalVolumes != null)
+            {
+                foreach (SoundChannel sound in _sfxChannels)
+                {
+                    if (_sfxChannelsOriginalVolumes.ContainsKey(sound))
+                    {
+                        sound.Volume = _sfxChannelsOriginalVolumes[sound];
+                    }
+                   
+                }
+                _sfxChannelsOriginalVolumes.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Mutes all bgm channels.
+        /// </summary>
+        public void MuteBGMChannels()
+        {
+
+            _bgmChannelsOriginalVolumes = new Dictionary<SoundChannel, float>();
+
+            foreach (SoundChannel sound in _bgmChannels)
+            {
+                _bgmChannelsOriginalVolumes.Add(sound, sound.Volume);
+                sound.Volume = 0;
+            }
+
+        }
+
+        /// <summary>
+        /// Restores all bgm channels volumes.
+        /// </summary>
+        public void UnMuteBGMChannels()
+        {
+
+            if (_bgmChannelsOriginalVolumes != null)
+            {
+                foreach (SoundChannel sound in _bgmChannels)
+                {
+                    if (_bgmChannelsOriginalVolumes.ContainsKey(sound))
+                    {
+                        sound.Volume = _bgmChannelsOriginalVolumes[sound];
+                    }
+
+                }
+                _bgmChannelsOriginalVolumes.Clear();
+            }
+        }
 
     }
 
