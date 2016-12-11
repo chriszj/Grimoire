@@ -338,8 +338,18 @@ namespace GLIB.Net {
 		/// <param name="requireDecompression">If set to <c>true</c> require decompression.</param>
 		public void AddDownloadFile( string _fileURI, string _savePath, string _saveAsFileName, bool requireDecompression = false ){
 
-			//Check if file exist first
-			string fileName = string.IsNullOrEmpty(_saveAsFileName)?Path.GetFileName (_fileURI):_saveAsFileName;
+            // Check if the file to download has a valid url
+            Uri uri = new Uri(_fileURI);
+            string urifileName = System.IO.Path.GetFileName(uri.AbsolutePath);
+
+            if (string.IsNullOrEmpty(urifileName) || !Path.HasExtension(urifileName))
+            {
+                Debug.LogWarning("Attempted to download a file with an invalid URL: " + _fileURI);
+                return;
+            }
+
+            //Check if file exist first
+            string fileName = string.IsNullOrEmpty(_saveAsFileName)?Path.GetFileName (_fileURI):_saveAsFileName;
 
 			if (System.IO.File.Exists (_savePath+"/"+fileName)) {
 				Debug.Log ("File "+fileName+" at path: " + _savePath + " already Exists");
