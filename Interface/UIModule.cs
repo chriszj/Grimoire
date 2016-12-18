@@ -48,9 +48,26 @@ namespace GLIB.Interface {
 			TOP = -1
 		}
 
+        public enum UIModuleStatusModes : int {
+            UNAVAILABLE = -1,
+            IN_UI_TRASITION = 0,
+            STAND_BY = 1
+        }
+
 		bool _isRunning = false;
 		public bool isRunning{get{return _isRunning;}}
 
+        public UIModuleStatusModes UIModuleCurrentStatus {
+            get {                
+                if (_isRunning && (_animateIn == true || _animateOut == true))
+                    return UIModuleStatusModes.IN_UI_TRASITION;
+                else if (_isRunning)
+                    return UIModuleStatusModes.STAND_BY;
+                else
+                    return UIModuleStatusModes.UNAVAILABLE;
+            }
+        }
+               
 		GameObject _displayObject;
 		/// <summary>
 		/// Returns the Display Object for the UIModule;
