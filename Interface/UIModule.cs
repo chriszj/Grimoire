@@ -209,7 +209,7 @@ namespace GLIB.Interface {
 				}
 				catch (System.Exception e)
 				{
-					Debug.LogError("Could not Process Initialization\n"+e.Message);
+					Debug.LogError("Could not Process Initialization\n"+"Exception Type: "+e.GetType().Name+"\n"+e.Message+"\n"+e.StackTrace);
 					Terminate(true);
 				}
 
@@ -241,7 +241,7 @@ namespace GLIB.Interface {
 				}
 				catch (System.Exception e)
 				{
-					Debug.LogError("Could not Process Initialization\n"+e.Message+"\n"+e.StackTrace);
+					Debug.LogError("Could not Process Initialization\n"+"Exception Type: "+e.GetType().Name+"\n"+e.Message+"\n"+e.StackTrace);
 					Terminate(true);
 				}
 
@@ -418,7 +418,7 @@ namespace GLIB.Interface {
 					ProcessUpdate ();
 				}
 				catch(System.Exception e) {
-					Debug.LogError("Could not Process Update\n"+e.Message+"\n"+e.StackTrace);
+					Debug.LogError("Could not Process Update\n"+"Exception Type: "+e.GetType().Name+"\n"+e.Message+"\n"+e.StackTrace);
 				}
 			}
 			
@@ -442,7 +442,7 @@ namespace GLIB.Interface {
 					}
 					catch (System.Exception e)
 					{
-						Debug.LogError("Could not Process Termination\n"+e.Message+"\n"+e.StackTrace);
+						Debug.LogError("Could not Process Termination\n"+"Exception Type: "+e.GetType().Name+"\n"+e.Message+"\n"+e.StackTrace);
 						ClearDisplayObject();
 
 					}
