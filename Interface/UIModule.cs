@@ -624,6 +624,56 @@ namespace GLIB.Interface {
 			Terminate (true);
 		}
 
-	}
+        /// <summary>
+        /// Loads and caché a texture from a remote url to asign into an Image component.
+        /// Uses the WWW class, so be aware that only jpgs and pngs files works. 
+        /// </summary>
+        /// <param name="img">The image component</param>
+        /// <param name="url">The url where the image file is stored</param>
+        /// <returns></returns>
+        public IEnumerator LoadCacheTextureIntoImage(Image img, string url)
+        {
+            img.sprite = null;
+
+            Debug.Log("url " + url);
+
+            string urlFileName = System.IO.Path.GetFileName(url);
+            Debug.Log("urlFileName " + urlFileName);
+
+            string localName =
+                Application.persistentDataPath + "/" + urlFileName;
+            Debug.Log("localName " + localName);
+
+            if (System.IO.File.Exists(localName))
+            {
+                // proudly load from cache with confidence
+
+                var ccc = new WWW("file://" + localName);
+                yield return ccc;
+
+                img.sprite = Sprite.Create(ccc.texture, new Rect(0, 0, ccc.texture.width, ccc.texture.height), new Vector2(0f, 0f));
+
+                Debug.Log("loaded from speedy local cache.");
+            }
+            else
+            {
+                var www = new WWW(url);
+                yield return www;
+
+                img.sprite = Sprite.Create(www.texture, new Rect(0, 0, www.texture.width, www.texture.height), new Vector2(0f, 0f));
+
+                System.IO.File.WriteAllBytes(localName, www.bytes);
+
+#if UNITY_IOS
+            UnityEngine.iOS.Device.SetNoBackupFlag(localName);
+#endif
+
+                Debug.Log("loaded from planetary cloud data system - "
+                         + " and saved to device SSD");
+            }
+
+        }
+
+    }
 
 }
