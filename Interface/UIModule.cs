@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using GLIB.Core;
 using GLIB.Extended;
 using GLIB.Utils;
@@ -641,7 +642,7 @@ namespace GLIB.Interface {
             Debug.Log("urlFileName " + urlFileName);
 
             string localName =
-                Application.persistentDataPath + "/" + urlFileName;
+                Application.persistentDataPath + "/cache/" + urlFileName;
             Debug.Log("localName " + localName);
 
             if (System.IO.File.Exists(localName))
@@ -662,14 +663,16 @@ namespace GLIB.Interface {
 
                 img.sprite = Sprite.Create(www.texture, new Rect(0, 0, www.texture.width, www.texture.height), new Vector2(0f, 0f));
 
+                Directory.CreateDirectory(Path.GetDirectoryName(localName));
+
                 System.IO.File.WriteAllBytes(localName, www.bytes);
 
 #if UNITY_IOS
-            UnityEngine.iOS.Device.SetNoBackupFlag(localName);
+                UnityEngine.iOS.Device.SetNoBackupFlag(localName);
 #endif
 
-                Debug.Log("loaded from planetary cloud data system - "
-                         + " and saved to device SSD");
+                Debug.Log("loaded from web - "
+                         + " and saved to device storage system");
             }
 
         }
