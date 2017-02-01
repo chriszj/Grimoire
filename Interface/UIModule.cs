@@ -88,13 +88,13 @@ namespace GLIB.Interface {
 		/// <value>The display object parent.</value>
 		protected abstract Transform DisplayObjectParent { get; }
 		
-		Vector2? _displayObjectPosition;
+		Vector3? _displayObjectPosition;
 		/// <summary>
 		/// Set the initial position of the Display Object. If you want to use the original
-		/// prefab's position then return a null vector in this way: Vector2? nullvector = null; return nullvector;
+		/// prefab's position then return a null vector in this way: Vector3? nullvector = null; return nullvector;
 		/// </summary>
 		/// <value>The display object position.</value>
-		protected abstract Vector2? DisplayObjectPosition { get; }
+		protected abstract Vector3? DisplayObjectPosition { get; }
 
 		int _displayObjectZIndex;
 		/// <summary>
@@ -490,9 +490,11 @@ namespace GLIB.Interface {
 
 				// Keep original size references to overcome the canvas scaler transformations later
 				Vector2 origSize = displayRect.sizeDelta;
-				Vector2 origPos = displayRect.anchoredPosition;
-
-				// If there is a Parent specified insert this object within.
+                
+                // Keep original local position references
+                Vector3 origAnchored3DPos = displayRect.anchoredPosition3D;
+                
+                // If there is a Parent specified insert this object within.
 				Transform _parent = DisplayObjectParent; 
 
 				// If parent is null, then perform the method ResolveMainCanvas;
@@ -547,13 +549,12 @@ namespace GLIB.Interface {
 				_displayObject.transform.SetSiblingIndex(siblingIndex);
 						
 				if(_displayObjectPosition.HasValue)
-					origPos = _displayObjectPosition.Value;
+					origAnchored3DPos = _displayObjectPosition.Value;
 						
 				// Readjust Position and Scale in order to prevent "Canvas Scaler" deformations
-				_displayObject.GetComponent<RectTransform>().anchoredPosition = origPos;
+				_displayObject.GetComponent<RectTransform>().anchoredPosition3D = origAnchored3DPos;
 				_displayObject.GetComponent<RectTransform>().sizeDelta = origSize;
-
-
+                                
 				/*Animation Preparation*/
 
 				if( _inOutTransition.animationType == Transition.InOutAnimations.SCALE ){

@@ -241,7 +241,7 @@ namespace GLIB.Utils {
 			}
 		}
 
-		protected override Vector2? DisplayObjectPosition {
+		protected override Vector3? DisplayObjectPosition {
 			get {
 				return null;
 			}
