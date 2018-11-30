@@ -288,7 +288,7 @@ namespace GLIB.Interface {
 
 						if(_previews != null && _previews.Length >= 1)
 						{
-							itemImg.sprite = i<_previews.Length?_previews[i]:new Sprite();
+							itemImg.sprite = i<_previews.Length?_previews[i]:null;
 						}
 					}
 				}

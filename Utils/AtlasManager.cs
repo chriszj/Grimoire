@@ -26,7 +26,7 @@ namespace GLIB.Utils
 
 		public static Sprite getSprite(string name)
 		{
-			Sprite sprite = new Sprite();
+			Sprite sprite = null;
 			bool found = false;
 
 			foreach (Sprite _sprite in _sprites) {
