@@ -22,7 +22,7 @@ using GLIB.Extended;
 /// HideItemGrid -> Hides Item Grid
 ///
 
-namespace GLIB.Interface {
+namespace GLIB.UI {
 
 	public class ItemGrid {
 

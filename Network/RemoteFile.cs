@@ -1,9 +1,9 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿namespace GLIB.Network {
 
-namespace GLIB.Net {
+    using UnityEngine;
+    using System.Collections;
 
-	public class RemoteFileRequester {
+    public class RemoteFileRequester {
 		public bool errorWhileDownloading;
 	}
 

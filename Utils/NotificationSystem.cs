@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System;
 
-using GLIB.Interface;
+using GLIB.UI;
 using GLIB.Extended;
 
 // Grimoire Util that provide you with a simple message system. 

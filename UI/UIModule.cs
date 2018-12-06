@@ -6,6 +6,7 @@ using System.IO;
 using GLIB.Core;
 using GLIB.Extended;
 using GLIB.Utils;
+using GLIB.Libraries;
 
 // TODO finish optimizations, why use list instead of using dictionary, dictionaries would be better!
 
@@ -15,7 +16,7 @@ using GLIB.Utils;
 
 // UI Module 
 // It requires RectTransform Component to fix position bugs
-namespace GLIB.Interface {	
+namespace GLIB.UI {	
 
 	public sealed class UIModuleDisplayObject:MonoBehaviour{
 

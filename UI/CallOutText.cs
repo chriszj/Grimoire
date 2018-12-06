@@ -5,7 +5,7 @@ using System;
 
 using GLIB.Extended;
 
-namespace GLIB.Interface
+namespace GLIB.UI
 {
 
     /// <summary>

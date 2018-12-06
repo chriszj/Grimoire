@@ -7,6 +7,7 @@ using System.Net;
 using System.ComponentModel;
 using GLIB.Core;
 using GLIB.Extended;
+using GLIB.Libraries;
 
 
 using System.IO;
@@ -28,7 +29,7 @@ using System.Security.Cryptography.X509Certificates;
 
 using GLIB.Utils;
 
-namespace GLIB.Net {
+namespace GLIB.Network {
 
 	public class NetClient : Singleton<NetClient> {
 

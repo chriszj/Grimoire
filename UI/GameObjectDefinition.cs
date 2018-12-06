@@ -29,7 +29,7 @@ using System.Collections;
 /// 
 /// </summary>
 
-namespace GLIB.Interface{
+namespace GLIB.UI{
 
 	public class GameObjectDefinition {
 

@@ -8,7 +8,7 @@ using System.Collections;
 
 namespace GLIB.Core {
 
-	public abstract class Singleton<T> : MonoBehaviour where T : MonoBehaviour  {
+	public abstract class Singleton_legacy<T> : MonoBehaviour where T : MonoBehaviour  {
 
 		static bool _isApplicationQuitting;
 
