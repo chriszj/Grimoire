@@ -1,20 +1,21 @@
 ﻿namespace GLIB.Core
 {
-
+    using System;
     using UnityEngine;
     using System.Collections;
 
     public interface IForm
     {
+        
         bool IsModuleRunning { get; }
 
         bool DataSubmitted { get; }
 
-        void StartForm();
+        void StartForm(Action onFormStart);
 
-        void EndForm();
+        void EndForm(Action onFormEnd);
 
-        void SubmitData();
+        void SubmitData(Action<string> onDataSubmission);
 
     }
 
