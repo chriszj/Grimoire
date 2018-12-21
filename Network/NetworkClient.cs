@@ -2,6 +2,7 @@
 {
 
     using System;
+    using System.IO;
     using UnityEngine;
     using UnityEngine.Networking;
     using System.Collections;
@@ -18,7 +19,7 @@
     public class NetworkClient : MonoBehaviour
     {
 
-        bool IsProcessingRequest
+        public bool IsProcessingRequest
         {
             get
             {
@@ -98,6 +99,51 @@
 
         }
 
+        public virtual void SendDownloadRequest(UnityWebRequest request, Action<DownloadHandler> onRequestResult, Action<Exception> onRequestFail)
+        {
+
+            try
+            {
+
+                /*
+                 /*
+             UnityWebRequest request = new UnityWebRequest(path.ImageUrl, UnityWebRequest.kHttpVerbGET);
+
+                Debug.LogError(path.ImageUrl);
+
+                if (!File.Exists(path.LocalImagePath))
+                {
+                    File.Create(path.LocalImagePath).Dispose();
+
+                    Uri fileUri = new Uri(path.ImageUrl);
+
+                    DownloadHandlerFile downHandler = new DownloadHandlerFile(path.LocalImagePath);
+
+                    request.downloadHandler = downHandler;
+
+                    StartCoroutine(DownloadBigImage(request, path));
+
+                }
+                else {
+                    DownloadButtons(path);
+                }
+                */
+                                
+
+                if (!_isProcessingRequest)
+                {
+                    StartCoroutine(WaitForRequest(request, onRequestResult, onRequestFail));
+                }
+                else
+                    throw new NetworkClientException("NetworkClient => Client is busy with another request.");
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+
+        }
+
         private IEnumerator WaitForRequest(WWW www, Action<string> onRequestResult)
         {
             _isProcessingRequest = true;
@@ -134,6 +180,33 @@
 
                 if (onRequestResult != null)
                     onRequestResult(request.downloadHandler.text);
+
+            }
+            else
+            {
+
+                if (onRequestFail != null)
+                    onRequestFail(new NetworkClientException("NetworkClient => An error ocurred on request: " + request.error));
+                else
+                    throw new NetworkClientException("NetworkClient => An error ocurred on request: " + request.error);
+            }
+
+        }
+
+        private IEnumerator WaitForRequest(UnityWebRequest request, Action<DownloadHandler> onRequestResult, Action<Exception> onRequestFail)
+        {
+
+            _isProcessingRequest = true;
+
+            yield return request.SendWebRequest();
+
+            _isProcessingRequest = false;
+
+            if (!request.isNetworkError)
+            {
+
+                if (onRequestResult != null)
+                    onRequestResult(request.downloadHandler);
 
             }
             else
