@@ -44,7 +44,9 @@
 
             UnityWebRequest request = new UnityWebRequest(url, UnityWebRequest.kHttpVerbGET);
 
-            File.Create(filepathToSave).Dispose();
+            //File.Create(filepathToSave).Dispose();
+
+            Directory.CreateDirectory(Path.GetDirectoryName(filepathToSave));
 
             DownloadHandlerFile downloadHandler = new DownloadHandlerFile(filepathToSave);
 
