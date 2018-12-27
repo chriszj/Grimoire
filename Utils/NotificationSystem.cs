@@ -318,9 +318,13 @@ namespace GLIB.Utils {
 
 		// Modify the buttons layout with a single or double button layout
 		// Todo needs more optmization for now only modifies x position of the buttons
+        [Obsolete("Use Unity's native layout system instead.")]
 		void HandleWindowButtons(Button acceptBtn, Button declineBtn, RectTransform container){
+            
+            // Let Unity native layout do its magic.
+            return;
 
-			if (acceptBtn == null && declineBtn == null) {
+            if (acceptBtn == null && declineBtn == null) {
 				Debug.LogError ("Could not align Accept button nor Decline button, null objects passed.");
 				return;
 			} else {
