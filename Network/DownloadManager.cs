@@ -38,7 +38,7 @@
         public void AddDownloadRequest(string url, string filepathToSave, Action<UnityWebRequest> onRequestBuild = null) {                      
 
             if (File.Exists(filepathToSave)) {
-                Debug.LogWarning("DownloadManager => File already exist.");
+                Debug.LogWarning("DownloadManager => File from url: "+url+" \nto save at: "+filepathToSave+" already exist.");
                 return;
             }
 
