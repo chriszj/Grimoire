@@ -397,8 +397,9 @@ namespace GLIB.UI {
                             }
 
                             // All animator components should be disabled in order to modify alpha values when doing transition out.
-                            foreach (Animator animator in animators)
-                                animator.enabled = false;
+                            // UPDATE: The animators should stay enabled, this would enable developers to customize the in out transitions more easily.
+                            //foreach (Animator animator in animators)
+                                //animator.enabled = false;
                             							
 							if (_inOutTransition.animationPercent <= 1){
 								_inOutTransition.animationPercent += Time.deltaTime / _inOutTransition.animationDuration;
