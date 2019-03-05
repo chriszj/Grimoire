@@ -570,19 +570,34 @@ namespace GLIB.UI {
 					RawImage[] rawImageComponents = _displayObject.GetComponentsInChildren<RawImage>();
                     _rawImageAlphaValues.Clear();
                     foreach (RawImage rawImage in rawImageComponents)
+                    {
                         _rawImageAlphaValues.Add(rawImage, rawImage.color.a);
+                        Color initColor = rawImage.color;
+                        initColor.a = 0;
+                        rawImage.color = initColor;
+                    }
                            
                     // Store all Images alpha values         
 					Image[] imageComponents = _displayObject.GetComponentsInChildren<Image>();
                     _imageAlphaValues.Clear();
                     foreach (Image image in imageComponents)
+                    {
                         _imageAlphaValues.Add(image, image.color.a);
+                        Color initColor = image.color;
+                        initColor.a = 0;
+                        image.color = initColor;
+                    }
 
                     // Store all Texts alpha values
 					Text[] textComponents = _displayObject.GetComponentsInChildren<Text>();
                     _textAlphaValues.Clear();
                     foreach (Text text in textComponents)
+                    {
                         _textAlphaValues.Add(text, text.color.a);
+                        Color initColor = text.color;
+                        initColor.a = 0;
+                        text.color = initColor;
+                    }
 
                     // Store all UI Shadows alpha values
                     Shadow[] shadows = _displayObject.GetComponentsInChildren<Shadow>();
