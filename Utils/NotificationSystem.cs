@@ -24,6 +24,9 @@ namespace GLIB.Utils {
 		Button _messageAcceptButton;
 		Button _messageDeclineButton;
 
+        string _messageAcceptLabel = "";
+        string _messageDeclineLabel = "";
+
 		#endregion
 
 		#region Properties
@@ -274,6 +277,18 @@ namespace GLIB.Utils {
 			if (_messageTextComp == null || _messageWindow == null || _messageImageComp == null || _messageAcceptButton == null || _messageDeclineButton == null)
 				throw new Exception ("Message required components not found");
 
+            Text messageAcceptButtonText = _messageAcceptButton.GetComponentInChildren<Text>();
+
+            if (messageAcceptButtonText && !string.IsNullOrEmpty(_messageAcceptLabel)) {
+                messageAcceptButtonText.text = _messageAcceptLabel;
+            }
+
+            Text messageDeclineButtonText = _messageDeclineButton.GetComponentInChildren<Text>();
+
+            if (messageDeclineButtonText && !string.IsNullOrEmpty(_messageDeclineLabel)) {
+                messageDeclineButtonText.text = _messageDeclineLabel;
+            }
+
 			_messageAcceptButton.onClick.AddListener (delegate {
 
 				if(_onMessageAccept != null)
@@ -369,13 +384,14 @@ namespace GLIB.Utils {
 
 		/// <summary>
 		/// Shows a simple message with an accept button which if specified execute the OnMessageAccept delegate passed, and closes the window.
-		/// </summary>
-		public void NotifyMessage (string message, Sprite icon = null, OnMessageAcceptDelegate onAccept = null){
+		/// </summary>		
+        public void NotifyMessage(string message, Sprite icon = null, OnMessageAcceptDelegate onAccept = null, string acceptLabel = "")
+        {
 
-			// Disable progress mode if enabled
-			MessageProgressMode = false;
+            // Disable progress mode if enabled
+            MessageProgressMode = false;
 
-			OnMessageAccept = Terminate;
+            OnMessageAccept = Terminate;
             OnMessageAccept = delegate {
 
                 if (onAccept != null)
@@ -384,19 +400,21 @@ namespace GLIB.Utils {
                 Terminate();
             };
 
-			OnMessageDecline = null;
+            OnMessageDecline = null;
 
-			MessageIcon = icon;
-			MessageText = message;
+            MessageIcon = icon;
+            MessageText = message;
 
-			Initialize ();
+            _messageAcceptLabel = acceptLabel;
 
-		}
+            Initialize();
 
-		/// <summary>
-		/// Shows a simple button-less window with a progress message about a happening action. 
-		/// </summary>
-		public void NotifyProgress (string progressMessage){
+        }
+
+        /// <summary>
+        /// Shows a simple button-less window with a progress message about a happening action. 
+        /// </summary>
+        public void NotifyProgress (string progressMessage){
 			
 			MessageProgressMode = true;
 
@@ -409,7 +427,7 @@ namespace GLIB.Utils {
 		/// <summary>
 		/// Prompts the user with a message of an action to be executed with two programable buttons to proceed and cancel 
 		/// </summary>
-		public void PromptAction (string message, OnMessageAcceptDelegate onAccept, OnMessageDeclineDelegate onDecline,  Sprite icon = null){
+		public void PromptAction (string message, OnMessageAcceptDelegate onAccept, OnMessageDeclineDelegate onDecline,  Sprite icon = null, string acceptLabel = "", string declineLabel = ""){
 
 			// Disable progress mode if enabled
 			MessageProgressMode = false;
@@ -419,6 +437,10 @@ namespace GLIB.Utils {
 
 			MessageIcon = icon;
 			MessageText = message;
+
+            _messageAcceptLabel = acceptLabel;
+
+            _messageDeclineLabel = declineLabel;
 
 			Initialize ();
 
